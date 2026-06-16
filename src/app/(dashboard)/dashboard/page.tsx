@@ -10,7 +10,7 @@ import SapWorkflowForm from "@/components/Workflow/SapWorkflowForm";
 import SapWorkflowMonitor from "@/components/Workflow/SapWorkflowMonitor";
 import SapWorkflowDetail from "@/components/Workflow/SapWorkflowDetail";
 import SapWorkflowTemplate from "@/components/Workflow/SapWorkflowTemplate";
-import SapFormBuilder from "@/components/Workflow/SapFormBuilder";
+import SapFromManager from "@/components/Workflow/SapFormManager";
 // Định nghĩa Type đồng bộ với hệ thống menu của SapNavbar
 import { SapViewType } from "@/components/layout/SapNavbar";
 
@@ -47,7 +47,7 @@ export default function DashboardPage() {
     case "WF_TEMPLATE":
       return <SapWorkflowTemplate />;
     case "FORM_BUILDER":
-      return <SapFormBuilder />;
+      return <SapFromManager />;
     case "WF_MONITOR":
       // Nếu có selectedWfId, hiển thị trang chi tiết đơn
       if (selectedWfId) {
