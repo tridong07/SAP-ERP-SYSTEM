@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Eye, EyeOff, LucideIcon } from "lucide-react";
 
 interface SapInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  icon: LucideIcon;
+  icon?: LucideIcon;
 }
 
 export default function SapInput({ icon: Icon, type = "text", ...props }: SapInputProps) {
@@ -14,7 +14,7 @@ export default function SapInput({ icon: Icon, type = "text", ...props }: SapInp
 
   return (
     <div className="relative flex items-center bg-zinc-50 border border-zinc-200 rounded-lg px-3 focus-within:border-[#0a6ed1] focus-within:bg-white focus-within:ring-1 focus-within:ring-[#0a6ed1] transition-all w-full">
-      <Icon className="h-4 w-4 text-zinc-400 shrink-0" />
+      {Icon && <Icon className="h-4 w-4 text-zinc-400 shrink-0" />}
       <input
         type={inputType}
         {...props}

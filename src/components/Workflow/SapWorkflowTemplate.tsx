@@ -32,53 +32,53 @@ export default function SapWorkflowTemplate() {
   );
 
   return (
-    <div className="h-full flex flex-col p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+    <div className="h-full flex flex-col p-8 bg-zinc-50/50">
+      {/* HEADER */}
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-xl font-bold text-zinc-800">Cấu hình lưu trình</h1>
-          <p className="text-sm text-zinc-500">Quản lý các quy trình phê duyệt doanh nghiệp</p>
+          <h1 className="text-2xl font-bold text-zinc-900">Quản lý Lưu trình</h1>
+          <p className="text-sm text-zinc-500">Thiết lập các cấp phê duyệt cho quy trình nghiệp vụ</p>
         </div>
-
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-zinc-400" size={16} />
             <input
-              placeholder="Tìm lưu trình..."
-              className="pl-10 pr-4 py-2 border rounded-lg text-sm w-full md:w-64 focus:ring-2 focus:ring-[#0a6ed1] outline-none"
+              placeholder="Tìm kiếm..."
+              className="pl-10 pr-4 py-2 border border-zinc-200 rounded-lg text-sm w-64 outline-none focus:border-[#0a6ed1] transition-colors"
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button
             onClick={() => { setSelectedTemplate(null); setIsPanelOpen(true); }}
-            className="bg-[#0a6ed1] hover:bg-[#085aae] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-md"
+            className="bg-[#0a6ed1] text-white px-5 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:bg-[#085aae]"
           >
-            <Plus size={16} /> Tạo mới
+            <Plus size={16} /> Tạo lưu trình
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {filteredTemplates.map((tpl: any) => (
+      {/* GRID TEMPLATES */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {templates.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((tpl: any) => (
           <div
             key={tpl.id}
             onClick={() => { setSelectedTemplate(tpl); setIsPanelOpen(true); }}
-            className="bg-white p-5 rounded-xl border border-zinc-200 shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group relative"
+            className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm hover:shadow-lg hover:border-blue-200 cursor-pointer transition-all group"
           >
-            <button
-              onClick={(e) => handleDelete(e, tpl.id)}
-              className="absolute top-3 right-3 p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-            >
-              <Trash2 size={16} />
-            </button>
-            <div>
-              <div className="w-10 h-10 bg-blue-50 text-[#0a6ed1] rounded-lg flex items-center justify-center mb-4">
-                <Layers size={20} />
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-blue-50 text-[#0a6ed1] rounded-xl flex items-center justify-center">
+                <Layers size={24} />
               </div>
-              <h3 className="font-bold text-zinc-800 mb-1">{tpl.name}</h3>
-              <p className="text-xs text-zinc-500">{tpl.steps.length} cấp phê duyệt</p>
+              <button onClick={(e) => handleDelete(e, tpl.id)} className="text-zinc-300 hover:text-red-500">
+                <Trash2 size={18} />
+              </button>
             </div>
-            <div className="mt-4 flex items-center text-[#0a6ed1] text-xs font-bold group-hover:underline">
-              Xem chi tiết <ChevronRight size={14} />
+            <h3 className="font-bold text-zinc-800 text-lg mb-1">{tpl.name}</h3>
+            <p className="text-xs text-zinc-500 font-medium bg-zinc-100 px-2 py-1 rounded w-fit mb-4">
+              {tpl.steps?.length || 0} cấp phê duyệt
+            </p>
+            <div className="flex items-center text-[#0a6ed1] text-sm font-bold group-hover:gap-2 transition-all">
+              Xem chi tiết <ChevronRight size={16} />
             </div>
           </div>
         ))}
