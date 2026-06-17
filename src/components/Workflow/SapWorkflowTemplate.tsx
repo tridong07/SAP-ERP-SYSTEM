@@ -58,30 +58,59 @@ export default function SapWorkflowTemplate() {
       </div>
 
       {/* GRID TEMPLATES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {templates.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((tpl: any) => (
-          <div
-            key={tpl.id}
-            onClick={() => { setSelectedTemplate(tpl); setIsPanelOpen(true); }}
-            className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm hover:shadow-lg hover:border-blue-200 cursor-pointer transition-all group"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-blue-50 text-[#0a6ed1] rounded-xl flex items-center justify-center">
-                <Layers size={24} />
-              </div>
-              <button onClick={(e) => handleDelete(e, tpl.id)} className="text-zinc-300 hover:text-red-500">
-                <Trash2 size={18} />
-              </button>
-            </div>
-            <h3 className="font-bold text-zinc-800 text-lg mb-1">{tpl.name}</h3>
-            <p className="text-xs text-zinc-500 font-medium bg-zinc-100 px-2 py-1 rounded w-fit mb-4">
-              {tpl.steps?.length || 0} cấp phê duyệt
-            </p>
-            <div className="flex items-center text-[#0a6ed1] text-sm font-bold group-hover:gap-2 transition-all">
-              Xem chi tiết <ChevronRight size={16} />
-            </div>
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-500 text-xs font-bold uppercase tracking-wider">
+              <th className="px-6 py-4">Mã số</th>
+              <th className="px-6 py-4">Tên lưu trình</th>
+              <th className="px-6 py-4">Số cấp phê duyệt</th>
+              <th className="px-6 py-4">Ngày cập nhật</th>
+              <th className="px-6 py-4 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-100">
+            {filteredTemplates.map((tpl: any) => (
+              <tr 
+                key={tpl.id} 
+                onClick={() => { setSelectedTemplate(tpl); setIsPanelOpen(true); }}
+                className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
+              >
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-50 text-[#0a6ed1] rounded-lg flex items-center justify-center">
+                      <Layers size={16} />
+                    </div>
+                    <span className="font-bold text-zinc-800">{tpl.name}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className="px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-md text-xs font-bold">
+                    {tpl.steps?.length || 0} cấp
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-zinc-500">
+                  {tpl.updatedAt ? new Date(tpl.updatedAt).toLocaleDateString('vi-VN') : '--/--/----'}
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <button 
+                    onClick={(e) => handleDelete(e, tpl.id)} 
+                    className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        
+        {/* Thông báo nếu không có dữ liệu */}
+        {filteredTemplates.length === 0 && (
+          <div className="p-12 text-center text-zinc-400 text-sm">
+            Chưa có lưu trình nào được tạo.
           </div>
-        ))}
+        )}
       </div>
 
       <WorkflowPanel

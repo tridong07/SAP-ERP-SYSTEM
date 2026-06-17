@@ -160,7 +160,7 @@ const handleSave = (updatedFormData: any) => {
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100 text-xs text-zinc-500 uppercase tracking-wider">
                 <th className="px-6 py-4 font-bold">Mã số</th>
-                <th className="px-6 py-4 font-bold">Nội dung yêu cầu</th>
+                <th className="px-6 py-4 font-bold">Loại đơn</th>
                 <th className="px-6 py-4 font-bold">Người tạo</th>
                 <th className="px-6 py-4 font-bold">Ngày tạo</th>
                 <th className="px-6 py-4 font-bold">Trạng thái</th>
