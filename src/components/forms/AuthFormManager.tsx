@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Lock, Mail, ArrowRight, ArrowLeft } from "lucide-react";
 import SapInput from "@/components/ui/SapInput";
 import SapButton from "@/components/ui/SapButton";
-import { useLanguage } from "@/context/LanguageContext"; // 1. Import hook ngôn ngữ
+import { useTranslation } from "@/hook/useTranslation";
 
 type AuthMode = "login" | "forgot" | "reset";
 
 export default function AuthFormManager() {
-  const { t } = useLanguage(); // 2. Lấy bộ từ dịch thuật ra
+  const [lang, setLang] = useState<"vi" | "en">("vi"); // Thêm state ngôn ngữ
+
+  const { t, loading } = useTranslation(lang);
   const [mode, setMode] = useState<AuthMode>("login");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", isError: false });
@@ -28,6 +30,10 @@ export default function AuthFormManager() {
     }
   }, []);
 
+  const toggleLanguage = () => {
+    setLang(prev => prev === "vi" ? "en" : "vi");
+  };
+
   // 1. Xử lý Logic Đăng Nhập
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +44,17 @@ export default function AuthFormManager() {
     const username = target.elements.username.value;
     const password = target.elements.password.value;
 
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        credentials: 'include',
       });
       const data = await response.json();
+     
       if (!response.ok) {
         setMessage({ text: data.message || "Đăng nhập thất bại", isError: true });
       } else {
@@ -54,7 +64,7 @@ export default function AuthFormManager() {
         } else {
           localStorage.removeItem("sap_remember_username");
         }
-
+        
         window.location.href = "/dashboard";
       }
     } catch (error) {
@@ -108,6 +118,8 @@ export default function AuthFormManager() {
     exit: { opacity: 0, x: -15, transition: { duration: 0.15 } }
   };
 
+  if (loading) return <div>Loading...</div>;
+
   return (
     <div className="w-full max-w-sm mx-auto my-auto min-h-[360px] flex flex-col justify-center">
       {message.text && (
@@ -120,27 +132,27 @@ export default function AuthFormManager() {
         {/* CHỂ ĐỘ 1: FORM ĐĂNG NHẬP */}
         {mode === "login" && (
           <motion.div key="login" variants={fadeVariants} initial="hidden" animate="visible" exit="exit">
-            <h2 className="text-2xl font-semibold text-[#222629] mb-1">{t.title}</h2>
-            <p className="text-xs text-[#6a6d70] mb-6">{t.subtitle}</p>
+            <h2 className="text-2xl font-semibold text-[#222629] mb-1">{t("title", "auth", "Đăng nhập hệ thống")}</h2>
+            <p className="text-xs text-[#6a6d70] mb-6">{t("subtitle","auth", "Vui lòng nhập thông tin đăng nhập")}</p>
             
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <SapInput icon={User} type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t.usernamePlaceholder} autoComplete="username" required />
-              <SapInput icon={Lock} type="password" name="password" placeholder={t.passwordPlaceholder} autoComplete="current-password" required />
+              <SapInput icon={User} type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t("usernamePlaceholder", "auth", "Tên người dùng")} autoComplete="username" required />
+              <SapInput icon={Lock} type="password" name="password" placeholder={t("passwordPlaceholder", "auth", "Mật khẩu")} autoComplete="current-password" required />
               
               {/* Khu vực chức năng: Ghi nhớ & Quên mật khẩu */}
               <div className="flex items-center justify-between text-xs select-none">
                 <label className="flex items-center gap-2 text-[#556b82] cursor-pointer">
                   <input type="checkbox"  checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-[#0a6ed1] focus:ring-[#0a6ed1] cursor-pointer transition-colors"/>
-                  {t.rememberMe}
+                  {t("rememberMe", "auth", "Ghi nhớ tôi")}
                 </label>
 
                 <button type="button" onClick={() => { setMode("forgot"); setMessage({text:"", isError:false}); }} className="text-[#0a6ed1] hover:underline focus:outline-none font-medium">
-                  {t.forgotPasswordLink}
+                  {t("forgotPasswordLink", "auth", "Quên mật khẩu")}
                 </button>
               </div>
 
               <SapButton type="submit" isLoading={isLoading}>
-                {t.submitBtn} <ArrowRight className="h-4 w-4" />
+                {t("submitBtn", "auth", "Đăng nhập")} <ArrowRight className="h-4 w-4" />
               </SapButton>
             </form>
           </motion.div>
@@ -149,15 +161,15 @@ export default function AuthFormManager() {
         {/* CHẾ ĐỘ 2: FORM QUÊN MẬT KHẨU */}
         {mode === "forgot" && (
           <motion.div key="forgot" variants={fadeVariants} initial="hidden" animate="visible" exit="exit">
-            <h2 className="text-2xl font-semibold text-[#222629] mb-1">{t.forgotTitle}</h2>
-            <p className="text-xs text-[#6a6d70] mb-6">{t.forgotSubtitle}</p>
+            <h2 className="text-2xl font-semibold text-[#222629] mb-1">{t("forgotTitle", "auth", "Quên mật khẩu")}</h2>
+            <p className="text-xs text-[#6a6d70] mb-6">{t("forgotSubtitle", "auth", "Vui lòng nhập email của bạn để đặt lại mật khẩu")}</p>
             
             <form onSubmit={handleForgotSubmit} className="space-y-4">
-              <SapInput icon={Mail} type="email" name="email" placeholder={t.emailPlaceholder} required />
-              <SapButton type="submit" isLoading={isLoading}>{t.forgotBtn}</SapButton>
+              <SapInput icon={Mail} type="email" name="email" placeholder={t("emailPlaceholder", "auth", "Email")} required />
+              <SapButton type="submit" isLoading={isLoading}>{t("forgotBtn", "auth", "Đặt lại mật khẩu")}</SapButton>
               <div className="text-center pt-2">
                 <button type="button" onClick={() => { setMode("login"); setMessage({text:"", isError:false}); }} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0a6ed1] hover:underline focus:outline-none">
-                  <ArrowLeft className="h-3.5 w-3.5" /> {t.backToLogin}
+                  <ArrowLeft className="h-3.5 w-3.5" /> {t("backToLogin", "auth", "Quay lại đăng nhập")}
                 </button>
               </div>
             </form>
@@ -167,13 +179,13 @@ export default function AuthFormManager() {
         {/* CHẾ ĐỘ 3: FORM ĐẶT LẠI MẬT KHẨU */}
         {mode === "reset" && (
           <motion.div key="reset" variants={fadeVariants} initial="hidden" animate="visible" exit="exit">
-            <h2 className="text-2xl font-semibold text-[#222629] mb-1">{t.resetTitle}</h2>
-            <p className="text-xs text-[#6a6d70] mb-6">{t.resetSubtitle}</p>
-            
+            <h2 className="text-2xl font-semibold text-[#222629] mb-1">{t("resetTitle", "auth", "Đặt lại mật khẩu")}</h2>
+            <p className="text-xs text-[#6a6d70] mb-6">{t("resetSubtitle", "auth", "Vui lòng nhập mật khẩu mới")}</p>
+
             <form onSubmit={handleResetSubmit} className="space-y-4">
-              <SapInput icon={Lock} type="password" name="password" placeholder={t.newPasswordPlaceholder} required />
-              <SapInput icon={Lock} type="password" name="confirmPassword" placeholder={t.confirmPasswordPlaceholder} required />
-              <SapButton type="submit" isLoading={isLoading}>{t.resetBtn}</SapButton>
+              <SapInput icon={Lock} type="password" name="password" placeholder={t("newPasswordPlaceholder", "auth", "Mật khẩu mới")} required />
+              <SapInput icon={Lock} type="password" name="confirmPassword" placeholder={t("confirmPasswordPlaceholder", "auth", "Xác nhận mật khẩu")} required />
+              <SapButton type="submit" isLoading={isLoading}>{t("resetBtn", "auth", "Đặt lại mật khẩu")}</SapButton>
             </form>
           </motion.div>
         )}

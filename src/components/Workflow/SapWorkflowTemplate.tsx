@@ -71,11 +71,12 @@ export default function SapWorkflowTemplate() {
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {filteredTemplates.map((tpl: any) => (
-              <tr 
-                key={tpl.id} 
-                onClick={() => { setSelectedTemplate(tpl); setIsPanelOpen(true); }}
-                className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
-              >
+              <tr  key={tpl.id}  onClick={() => { setSelectedTemplate(tpl); setIsPanelOpen(true); }} className="hover:bg-blue-50/50 cursor-pointer transition-colors group">
+                {/* Cột Mã số hiển thị CODE_NO */}
+                <td className="px-6 py-4 font-mono font-bold text-[#0a6ed1]">
+                  {tpl.code_no || "N/A"}
+                </td>
+
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-50 text-[#0a6ed1] rounded-lg flex items-center justify-center">
@@ -93,10 +94,7 @@ export default function SapWorkflowTemplate() {
                   {tpl.updatedAt ? new Date(tpl.updatedAt).toLocaleDateString('vi-VN') : '--/--/----'}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button 
-                    onClick={(e) => handleDelete(e, tpl.id)} 
-                    className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                  >
+                  <button onClick={(e) => handleDelete(e, tpl.id)}  className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
                     <Trash2 size={18} />
                   </button>
                 </td>

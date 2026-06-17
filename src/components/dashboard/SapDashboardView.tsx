@@ -1,37 +1,96 @@
 "use client";
 
-import React from "react";
-import { DollarSign, Users, ClipboardCheck, TrendingUp, ArrowUpRight, Clock, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { DollarSign, Users, ClipboardCheck, TrendingUp, ArrowUpRight, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 // Import type để đảm bảo an toàn dữ liệu (kiểm tra lại đường dẫn file điều hướng của bạn nhé)
 import { SapViewType } from "@/components/layout/SapNavbar";
+import { AreaChart, Area, XAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 interface SapDashboardViewProps {
   onQuickNavigate: (view: SapViewType, metadata?: string | null) => void;
 }
 
+interface DashboardResponse {
+  stats: any[];
+  recentWorkflows: any[];
+  infrastructure: {
+    bufferCache: number;
+    activeConnections: number;
+    redoLogUsage: number;
+  };
+  chartData: { label: string; value: number }[];
+}
+
+// Sub-component để code gọn hơn
+function KPIKeyCard({ item, onClick }: { item: any; onClick: () => void }) {
+  const Icon = item.icon || DollarSign;
+  return (
+    <div onClick={onClick} className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center justify-between cursor-pointer group hover:border-[#0a6ed1]">
+      <div>
+        <span className="text-xs font-semibold text-zinc-400 uppercase">{item.title}</span>
+        <span className="text-2xl font-bold block text-zinc-800">{item.value}</span>
+        <span className={`text-[11px] font-medium ${item.isUp ? "text-emerald-600" : "text-zinc-400"}`}>{item.change}</span>
+      </div>
+      <div className={`p-3 rounded-lg ${item.bg || 'bg-zinc-100'} ${item.color || 'text-zinc-600'}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+    </div>
+  );
+}
+
 export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewProps) {
   const { t } = useLanguage();
+  const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Dữ liệu các thẻ KPI kèm theo mục tiêu điều hướng (targetView)
-  const stats = [
-    { title: t.statRevenue, value: "$142,500", change: "+12.4%", isUp: true, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", targetView: "DASHBOARD" as SapViewType },
-    { title: t.statHR, value: "32", change: "+4.8%", isUp: true, icon: Users, color: "text-[#0a6ed1]", bg: "bg-blue-50", targetView: "HR_EMPLOYEES" as SapViewType }, // Bấm nhảy sang phân hệ nhân sự
-    { title: t.statTask, value: "09", change: "-2 chủ nhật", isUp: false, icon: ClipboardCheck, color: "text-amber-600", bg: "bg-amber-50", targetView: "WF_MONITOR" as SapViewType }, // Bấm nhảy sang theo dõi đơn ký
-    { title: t.statRate, value: "94.2%", change: "+1.5%", isUp: true, icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", targetView: "DASHBOARD" as SapViewType },
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchDashboard = async () => {
+      try {
+        const response = await fetch(`${baseUrl}/dashboard/summary`, { credentials: 'include' });
+        const data = await response.json();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, [baseUrl]);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-[#0a6ed1]" /></div>;
+  if (!dashboardData) return <div>Không thể tải dữ liệu</div>;
+
+  // Cấu hình metadata cố định cho các thẻ KPI
+  const statsConfig = [
+    { icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", targetView: "DASHBOARD" },
+    { icon: Users, color: "text-[#0a6ed1]", bg: "bg-blue-50", targetView: "HR_EMPLOYEES" },
+    { icon: ClipboardCheck, color: "text-amber-600", bg: "bg-amber-50", targetView: "WF_MONITOR" },
+    { icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", targetView: "DASHBOARD" },
   ];
 
-  // Dữ liệu Bảng hoạt động gần đây
-  const recentWorkflows = [
-    { id: "WF-092", content: "Phê duyệt ngân sách dự án SAP Cloud v4", requester: "Nguyễn Trung Kiên (IT)", date: "14/06/2026", status: "pending" },
-    { id: "WF-091", content: "Yêu cầu cấp phát Laptop Dev - Kỹ sư mới", requester: "Trần Thị Hồng (HR)", date: "14/06/2026", status: "approved" },
-    { id: "WF-089", content: "Đề xuất tăng ca ON-SIGHT hệ thống Oracle DB", requester: "Phạm Minh Hoàng (Ops)", date: "13/06/2026", status: "approved" },
-  ];
+  // Sử dụng Optional Chaining (?.) để tránh lỗi "undefined reading map"
+  const stats = (dashboardData?.stats || []).map((item: any, index: number) => ({
+    ...item,
+    ...(statsConfig[index] || {}), // Kết hợp cấu hình mặc định nếu index tồn tại
+  }));
+
+  // 3. Dữ liệu bảng (Dùng trực tiếp từ API)
+  const recentWorkflows = dashboardData?.recentWorkflows || [];
 
   return (
     <div className="space-y-6 text-[#32363a] w-full">
       {/* 1. KHỐI TIÊU ĐỀ CHÀO MỪNG */}
-      <div>
+      <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
         <h1 className="text-xl font-bold tracking-tight text-zinc-800">
           {t.dashWelcome} <span className="text-[#0a6ed1]">Administrator</span> 👋
         </h1>
@@ -40,27 +99,9 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
 
       {/* 2. LƯỚI THẺ KPI - ĐÃ THÊM TÍNH NĂNG ĐIỀU HƯỚNG NHANH */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((item, idx) => {
-          const Icon = item.icon;
-          return (
-            <div 
-              key={idx} 
-              onClick={() => onQuickNavigate(item.targetView, null)}
-              className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center justify-between transition-all hover:shadow-md hover:border-[#0a6ed1] cursor-pointer group"
-            >
-              <div className="space-y-2">
-                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block group-hover:text-zinc-600 transition-colors">{item.title}</span>
-                <span className="text-2xl font-bold tracking-tight block text-zinc-800">{item.value}</span>
-                <span className={`text-[11px] font-medium flex items-center gap-1 ${item.isUp ? "text-emerald-600" : "text-zinc-400"}`}>
-                  {item.change} {item.isUp && "▲"}
-                </span>
-              </div>
-              <div className={`p-3 rounded-lg transition-transform group-hover:scale-105 ${item.bg} ${item.color}`}>
-                <Icon className="h-5 w-5" />
-              </div>
-            </div>
-          );
-        })}
+        {stats.map((item, idx) => (
+          <KPIKeyCard key={idx} item={item} onClick={() => onQuickNavigate(item.targetView as SapViewType, null)} />
+        ))}
       </div>
 
       {/* 3. PHÂN HỆ BIỂU ĐỒ & BẢNG SỐ LIỆU TỔNG HỢP */}
@@ -72,34 +113,33 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
               <h3 className="font-bold text-sm text-zinc-800">Xu hướng hiệu năng hệ thống</h3>
               <p className="text-[11px] text-zinc-400 mt-0.5">Dữ liệu phân tích đồng bộ thời gian thực</p>
             </div>
-            <span 
-              onClick={() => onQuickNavigate("WF_MONITOR", null)}
-              className="text-xs text-[#0a6ed1] font-semibold flex items-center gap-1 cursor-pointer hover:underline"
-            >
+            <span onClick={() => onQuickNavigate("WF_MONITOR", null)} className="text-xs text-[#0a6ed1] font-semibold flex items-center gap-1 cursor-pointer hover:underline">
               Chi tiết <ArrowUpRight className="h-3 w-3" />
             </span>
           </div>
-
-          <div className="w-full pt-6">
-            <svg viewBox="0 0 500 150" className="w-full overflow-visible">
-              <defs>
-                <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0a6ed1" stopOpacity="0.2"/>
-                  <stop offset="100%" stopColor="#0a6ed1" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              <line x1="0" y1="30" x2="500" y2="30" stroke="#f4f4f5" strokeWidth="1" />
-              <line x1="0" y1="80" x2="500" y2="80" stroke="#f4f4f5" strokeWidth="1" />
-              <line x1="0" y1="130" x2="500" y2="130" stroke="#f4f4f5" strokeWidth="1" />
-              <path d="M0,130 Q80,60 160,90 T320,40 T500,10 L500,130 L0,130 Z" fill="url(#chart-grad)" />
-              <path d="M0,130 Q80,60 160,90 T320,40 T500,10" fill="none" stroke="#0a6ed1" strokeWidth="2.5" />
-              <circle cx="160" cy="90" r="4" fill="#fff" stroke="#0a6ed1" strokeWidth="2" />
-              <circle cx="320" cy="40" r="4" fill="#fff" stroke="#0a6ed1" strokeWidth="2" />
-              <circle cx="500" cy="10" r="4" fill="#fff" stroke="#0a6ed1" strokeWidth="2" />
-            </svg>
-            <div className="flex justify-between text-[10px] font-bold text-zinc-400 mt-2 px-1">
-              <span>Thứ 2</span><span>Thứ 4</span><span>Thứ 6</span><span>Chủ nhật</span>
+          {/* Đảm bảo div bao quanh có chiều cao cố định (ví dụ: h-48 tương đương 192px) */}
+          <div style={{ height: '192px', width: '100%', position: 'relative' }}>
+            {hasMounted && dashboardData?.chartData ? (
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <AreaChart data={dashboardData?.chartData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0a6ed1" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#0a6ed1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="0" vertical={false} stroke="#f4f4f5" />
+                {/* 1. Hiệu ứng hiển thị khi rê chuột (Tooltip) */}
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px'}} cursor={{ stroke: '#0a6ed1', strokeWidth: 1 }}/>
+                {/* 2. Tiêu đề phía dưới (Trục X) */}
+                <XAxis dataKey="label"  axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#a1a1aa', fontWeight: 'bold' }} dy={10} />
+                <Area type="monotone" dataKey="value" stroke="#0a6ed1" fill="#0a6ed1" fillOpacity={0.2} activeDot={{ r: 5, fill: '#fff', stroke: '#0a6ed1', strokeWidth: 2 }} />
+              </AreaChart>
+            </ResponsiveContainer>) : (
+            <div className="h-full w-full flex items-center justify-center bg-zinc-50 animate-pulse rounded-lg text-xs text-zinc-400">
+              Đang tải biểu đồ...
             </div>
+            )}
           </div>
         </div>
 
@@ -195,3 +235,4 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
     </div>
   );
 }
+
