@@ -24,3 +24,21 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tùy chỉnh thanh cuộn cho toàn bộ trình duyệt hoặc riêng Sidebar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px; /* Độ dày thanh cuộn */
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent; /* Nền thanh cuộn trong suốt */
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(63, 63, 70, 0.5); /* Màu xám mờ của thanh cuộn */
+  border-radius: 20px;
+}
+
+.overflow-y-auto:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 110, 0.8); /* Đậm hơn khi di chuột vào */
+}

@@ -2,14 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { DollarSign, Users, ClipboardCheck, TrendingUp, ArrowUpRight, Clock, CheckCircle2, Loader2 } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
-// Import type để đảm bảo an toàn dữ liệu (kiểm tra lại đường dẫn file điều hướng của bạn nhé)
-import { SapViewType } from "@/components/layout/SapNavbar";
+import { useTranslation } from "@/hook/useTranslation";
+import { useView } from "@/context/ViewContext"; // Tích hợp hook mới
 import { AreaChart, Area, XAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
-
-interface SapDashboardViewProps {
-  onQuickNavigate: (view: SapViewType, metadata?: string | null) => void;
-}
 
 interface DashboardResponse {
   stats: any[];
@@ -39,8 +34,10 @@ function KPIKeyCard({ item, onClick }: { item: any; onClick: () => void }) {
   );
 }
 
-export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewProps) {
-  const { t } = useLanguage();
+export default function SapDashboardView() {
+  const [lang, setLang] = useState<"vi" | "en">("vi"); // Thêm state ngôn ngữ
+  const { t } = useTranslation(lang);
+  const { setCurrentView } = useView(); // Hook điều hướng
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasMounted, setHasMounted] = useState(false);
@@ -48,10 +45,10 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    const controller = new AbortController();
+    setHasMounted(true);
     const fetchDashboard = async () => {
       try {
-        const response = await fetch(`${baseUrl}/dashboard/summary`, { credentials: 'include' });
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dashboard/summary`, { credentials: 'include' });
         const data = await response.json();
         setDashboardData(data);
       } catch (error) {
@@ -61,10 +58,6 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
       }
     };
     fetchDashboard();
-  }, [baseUrl]);
-
-  useEffect(() => {
-    setHasMounted(true);
   }, []);
 
   if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-[#0a6ed1]" /></div>;
@@ -92,15 +85,15 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
       {/* 1. KHỐI TIÊU ĐỀ CHÀO MỪNG */}
       <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
         <h1 className="text-xl font-bold tracking-tight text-zinc-800">
-          {t.dashWelcome} <span className="text-[#0a6ed1]">Administrator</span> 👋
+          {t("dashWelcome")} <span className="text-[#0a6ed1]">Administrator</span> 👋
         </h1>
-        <p className="text-xs text-zinc-500 mt-1">{t.dashSubtitle}</p>
+        <p className="text-xs text-zinc-500 mt-1">{t("dashSubtitle")}</p>
       </div>
 
       {/* 2. LƯỚI THẺ KPI - ĐÃ THÊM TÍNH NĂNG ĐIỀU HƯỚNG NHANH */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((item, idx) => (
-          <KPIKeyCard key={idx} item={item} onClick={() => onQuickNavigate(item.targetView as SapViewType, null)} />
+          <KPIKeyCard key={idx} item={item} onClick={() => setCurrentView(item.targetView)} />
         ))}
       </div>
 
@@ -113,7 +106,7 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
               <h3 className="font-bold text-sm text-zinc-800">Xu hướng hiệu năng hệ thống</h3>
               <p className="text-[11px] text-zinc-400 mt-0.5">Dữ liệu phân tích đồng bộ thời gian thực</p>
             </div>
-            <span onClick={() => onQuickNavigate("WF_MONITOR", null)} className="text-xs text-[#0a6ed1] font-semibold flex items-center gap-1 cursor-pointer hover:underline">
+            <span onClick={() => setCurrentView("WF_MONITOR", null)} className="text-xs text-[#0a6ed1] font-semibold flex items-center gap-1 cursor-pointer hover:underline">
               Chi tiết <ArrowUpRight className="h-3 w-3" />
             </span>
           </div>
@@ -182,55 +175,22 @@ export default function SapDashboardView({ onQuickNavigate }: SapDashboardViewPr
         </div>
       </div>
 
-      {/* 4. PHẦN BẢNG DỮ LIỆU WORKFLOWS - BẤM TRỰC TIẾP ĐỂ XEM CHI TIẾT ĐƠN */}
+      {/* Workflow Table */}
       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-zinc-100 bg-zinc-50/50 flex justify-between items-center">
-          <h3 className="font-bold text-sm text-zinc-800">{t.recentActivity}</h3>
-          <button 
-            onClick={() => onQuickNavigate("WF_CREATE", null)}
-            className="text-xs text-[#0a6ed1] hover:text-blue-700 font-bold flex items-center gap-1"
-          >
-            + Tạo đơn mới
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-100/40 text-zinc-400 font-bold uppercase tracking-wider">
-                <th className="p-3 pl-4">Mã số</th>
-                <th className="p-3">{t.colContent}</th>
-                <th className="p-3">{t.colRequester}</th>
-                <th className="p-3">{t.colDate}</th>
-                <th className="p-3 pr-4 text-center">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {recentWorkflows.map((wf) => (
-                <tr 
-                  key={wf.id} 
-                  onClick={() => onQuickNavigate("WF_MONITOR", wf.id)} // Truyền trực tiếp ID đơn để nhảy vào trang chi tiết đơn ký
-                  className="hover:bg-zinc-50/80 cursor-pointer transition-colors group"
-                >
-                  <td className="p-3 pl-4 font-mono font-bold text-[#0a6ed1] group-hover:underline">{wf.id}</td>
-                  <td className="p-3 font-medium text-zinc-700 max-w-xs truncate">{wf.content}</td>
-                  <td className="p-3 text-zinc-500">{wf.requester}</td>
-                  <td className="p-3 text-zinc-400">{wf.date}</td>
-                  <td className="p-3 pr-4 text-center">
-                    {wf.status === "approved" ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
-                        <CheckCircle2 className="h-2.5 w-2.5" /> {t.statusApproved}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-                        <Clock className="h-2.5 w-2.5" /> {t.statusPending}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <table className="w-full text-xs text-left">
+           <thead className="bg-zinc-50 border-b border-zinc-200 uppercase text-zinc-400 font-bold">
+             <tr><th className="p-3">Mã số</th><th className="p-3">Nội dung</th><th className="p-3">Trạng thái</th></tr>
+           </thead>
+           <tbody className="divide-y">
+             {dashboardData.recentWorkflows.map((wf) => (
+               <tr key={wf.id} onClick={() => setCurrentView("WF_MONITOR", wf.id)} className="hover:bg-zinc-50 cursor-pointer">
+                 <td className="p-3 text-[#0a6ed1] font-bold">{wf.id}</td>
+                 <td className="p-3">{wf.content}</td>
+                 <td className="p-3">{wf.status}</td>
+               </tr>
+             ))}
+           </tbody>
+        </table>
       </div>
     </div>
   );

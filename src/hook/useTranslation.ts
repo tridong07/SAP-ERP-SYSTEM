@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getTranslations } from "@/services/translationService";
 
-export function useTranslation(lang: "vi" | "en") {
+export function useTranslation(defaultLang: "vi" | "en" = "vi") {
+  const [language, setLanguage] = useState<"vi" | "en">(defaultLang);
   const [tData, setTData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
@@ -10,7 +11,7 @@ export function useTranslation(lang: "vi" | "en") {
     const init = async () => {
       try {
         setLoading(true);
-        const data = await getTranslations(lang);
+        const data = await getTranslations(language);
         // Đảm bảo data luôn là object, nếu không phải thì gán {}
         setTData(data && typeof data === 'object' ? data : {});
       } catch (error) {
@@ -21,7 +22,12 @@ export function useTranslation(lang: "vi" | "en") {
       }
     };
     init();
-  }, [lang]);
+  }, [language]);
+
+  // Hàm chuyển đổi ngôn ngữ
+  const toggleLanguage = useCallback(() => {
+    setLanguage((prev) => (prev === "vi" ? "en" : "vi"));
+  }, []);
 
   // Hàm dịch (t) luôn trả về một string (để tránh lỗi React Child)
   const t = (key: string, namespace: string = 'common', defaultValue?: string): string => {
@@ -49,5 +55,5 @@ export function useTranslation(lang: "vi" | "en") {
     return nsData[key] as string;
   };
 
-  return { t, loading };
+  return { t, loading, language, toggleLanguage };
 }
