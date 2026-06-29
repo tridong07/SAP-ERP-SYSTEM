@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import SapHeader from "@/components/layout/SapHeader";
 import SapNavbar from "@/components/layout/SapNavbar";
 import { useView } from "@/context/ViewContext";
@@ -8,22 +8,6 @@ import { useView } from "@/context/ViewContext";
 export default function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentView, setCurrentView } = useView();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDesktopOpen, setIsDesktopOpen] = useState(false); 
-  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // LOGIC ĐÓNG MỞ
-  const handleOpenDesktop = () => {
-    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-    setIsDesktopOpen(true);
-  };
-
-  const handleCloseDesktop = () => {
-    hoverTimeout.current = setTimeout(() => {
-      setIsDesktopOpen(false);
-    }, 200); // Delay nhẹ giúp trải nghiệm mượt hơn
-  };
-  
-  console.log("LayoutContent - isDesktopOpen:", isDesktopOpen);
 
   return (
     <div className="flex h-screen w-full bg-zinc-100 overflow-hidden relative">
@@ -40,23 +24,17 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
               currentView={currentView} 
               onViewChange={setCurrentView} 
               onCloseMobile={() => setIsSidebarOpen(false)}
-              isOpen={true} 
               isMobile={true}
             />
           </aside>
         </div>
       )}
 
-      {/* DESKTOP SIDEBAR */}
-      {/* Container của Navbar desktop không nên có sự kiện hover làm đóng mở tự động 
-          nếu bạn đã có cơ chế Click để mở menu ở Side Rail */}
+      {/* DESKTOP SIDEBAR: SapNavbar giờ tự quản lý state của chính nó */}
       <aside className="hidden lg:block h-full shrink-0 z-50">
         <SapNavbar 
           currentView={currentView} 
           onViewChange={setCurrentView}
-          isOpen={isDesktopOpen}
-          onOpenDesktop={handleOpenDesktop} 
-          onMouseLeave={handleCloseDesktop}
           isMobile={false}
         />
       </aside>
@@ -65,7 +43,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
       <div className="flex flex-col flex-1 h-full overflow-hidden transition-all duration-300">
         <SapHeader 
           onToggleSidebar={() => setIsSidebarOpen(true)} 
-          isCollapsed={!isDesktopOpen} 
+          isCollapsed={true} // Bạn có thể chỉnh lại logic này nếu cần
         />
         <main className="flex-1 overflow-y-auto p-6 bg-[#f4f5f6]">
           {children} 
